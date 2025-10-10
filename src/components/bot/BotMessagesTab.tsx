@@ -8,9 +8,11 @@ import { Save } from "lucide-react";
 import MediaUploader from "@/components/shared/MediaUploader";
 import { supabase } from "@/integrations/supabase/runtime-client";
 import { useToast } from "@/hooks/use-toast";
+
 interface BotMessagesTabProps {
   botId: string;
 }
+
 interface BotMessage {
   id?: string;
   message_type: string;
@@ -19,12 +21,23 @@ interface BotMessage {
   media_type?: string;
   selected_plans?: string[];
 }
+
 interface BotPlan {
   id: string;
   plan_name: string;
   price: number;
   duration_days: number;
 }
+
+// Função para normalizar media_type
+const normalizeMediaType = (type: 'photo' | 'video' | 'audio' | 'document' | string | null | undefined): 'image' | 'video' | 'audio' | null => {
+  if (!type) return null;
+  if (type === 'photo') return 'image';
+  if (type === 'video') return 'video';
+  if (type === 'audio') return 'audio';
+  return null; // document or any other type returns null
+};
+
 const BotMessagesTab = ({
   botId
 }: BotMessagesTabProps) => {
@@ -51,10 +64,12 @@ const BotMessagesTab = ({
   const [availablePlans, setAvailablePlans] = useState<BotPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
   useEffect(() => {
     fetchMessages();
     fetchPlans();
   }, [botId]);
+
   const fetchMessages = async () => {
     setIsLoading(true);
     try {
@@ -103,6 +118,7 @@ const BotMessagesTab = ({
       setIsLoading(false);
     }
   };
+
   const fetchPlans = async () => {
     try {
       const {
@@ -115,6 +131,7 @@ const BotMessagesTab = ({
       console.error('Error fetching plans:', error);
     }
   };
+
   const handleSaveMessage = async (messageType: string) => {
     setIsSaving(true);
     try {
@@ -131,7 +148,7 @@ const BotMessagesTab = ({
         message_type: messageType,
         message_text: message.message_text,
         media_url: message.media_url || null,
-        media_type: message.media_type || null
+        media_type: normalizeMediaType(message.media_type)
       };
       let messageId = message.id;
       if (message.id) {
@@ -187,16 +204,18 @@ const BotMessagesTab = ({
       setIsSaving(false);
     }
   };
+
 const handleMediaUploaded = (messageType: string, url: string, type: 'photo' | 'video' | 'audio' | 'document') => {
     setMessages(prev => ({
       ...prev,
       [messageType]: {
         ...prev[messageType],
         media_url: url,
-        media_type: type
+        media_type: normalizeMediaType(type)
       }
     }));
   };
+
   const togglePlanSelection = (messageType: string, planId: string) => {
     setMessages(prev => {
       const currentPlans = prev[messageType].selected_plans || [];
@@ -210,9 +229,11 @@ const handleMediaUploaded = (messageType: string, url: string, type: 'photo' | '
       };
     });
   };
+
   if (isLoading) {
     return <div className="text-center text-muted-foreground">Carregando...</div>;
   }
+
   return <div className="space-y-6">
       <Card className="glass-card border-glass-border/50">
         <CardHeader>
@@ -223,7 +244,6 @@ const handleMediaUploaded = (messageType: string, url: string, type: 'photo' | '
         </CardHeader>
         <CardContent className="space-y-4">
           <MediaUploader botId={botId} onMediaUploaded={(url, type) => handleMediaUploaded('welcome', url, type)} currentMediaUrl={messages.welcome.media_url} currentMediaType={messages.welcome.media_type} />
-
           <div className="space-y-2">
             <Label>Mensagem</Label>
             <Textarea value={messages.welcome.message_text} onChange={e => setMessages(prev => ({
@@ -237,7 +257,6 @@ const handleMediaUploaded = (messageType: string, url: string, type: 'photo' | '
               Suporta emojis e formatação HTML básica
             </p>
           </div>
-
           <div className="space-y-2">
             <Label>Planos Disponíveis (opcional)</Label>
             {availablePlans.length === 0 ? <p className="text-sm text-muted-foreground">
@@ -251,7 +270,6 @@ const handleMediaUploaded = (messageType: string, url: string, type: 'photo' | '
                   </div>)}
               </div>}
           </div>
-
           <div className="flex gap-2">
             <Button onClick={() => handleSaveMessage('welcome')} disabled={isSaving} className="gap-2">
               <Save className="w-4 h-4" />
@@ -260,11 +278,9 @@ const handleMediaUploaded = (messageType: string, url: string, type: 'photo' | '
           </div>
         </CardContent>
       </Card>
-
       
-
       
-
     </div>;
 };
+
 export default BotMessagesTab;
