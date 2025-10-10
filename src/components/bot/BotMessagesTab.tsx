@@ -77,7 +77,9 @@ const BotMessagesTab = ({
         data,
         error
       } = await supabase.from('bot_messages').select('*').eq('bot_id', botId).in('message_type', ['welcome', 'thank_you', 'expiration']);
+
       if (error) throw error;
+
       const messagesMap: Record<string, BotMessage> = {
         welcome: {
           message_type: 'welcome',
@@ -101,11 +103,13 @@ const BotMessagesTab = ({
         const {
           data: planData
         } = await supabase.from('bot_message_plans').select('bot_plan_id').eq('bot_message_id', msg.id);
+
         messagesMap[msg.message_type] = {
           ...msg,
           selected_plans: planData?.map(p => p.bot_plan_id) || []
         };
       }
+
       setMessages(messagesMap);
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -125,7 +129,9 @@ const BotMessagesTab = ({
         data,
         error
       } = await supabase.from('bot_plans').select('*').eq('bot_id', botId).eq('is_active', true);
+
       if (error) throw error;
+
       setAvailablePlans(data || []);
     } catch (error) {
       console.error('Error fetching plans:', error);
@@ -141,7 +147,9 @@ const BotMessagesTab = ({
           user
         }
       } = await supabase.auth.getUser();
+
       if (!user) throw new Error('User not authenticated');
+
       const messageData = {
         bot_id: botId,
         user_id: user.id,
@@ -150,19 +158,29 @@ const BotMessagesTab = ({
         media_url: message.media_url || null,
         media_type: normalizeMediaType(message.media_type)
       };
+
+      // Verificação extra: força media_type válido ou null
+      if (!['image', 'video', 'audio', null].includes(messageData.media_type)) {
+        messageData.media_type = null;
+      }
+
       let messageId = message.id;
+
       if (message.id) {
         const {
           error
         } = await supabase.from('bot_messages').update(messageData).eq('id', message.id);
+
         if (error) throw error;
       } else {
         const {
           data,
           error
         } = await supabase.from('bot_messages').insert(messageData).select().single();
+
         if (error) throw error;
         messageId = data.id;
+
         setMessages(prev => ({
           ...prev,
           [messageType]: {
@@ -183,12 +201,15 @@ const BotMessagesTab = ({
             bot_message_id: messageId,
             bot_plan_id: planId
           }));
+
           const {
             error: plansError
           } = await supabase.from('bot_message_plans').insert(planInserts);
+
           if (plansError) throw plansError;
         }
       }
+
       toast({
         title: "Mensagem salva!",
         description: "As alterações foram salvas com sucesso"
@@ -220,6 +241,7 @@ const handleMediaUploaded = (messageType: string, url: string, type: 'photo' | '
     setMessages(prev => {
       const currentPlans = prev[messageType].selected_plans || [];
       const isSelected = currentPlans.includes(planId);
+
       return {
         ...prev,
         [messageType]: {
