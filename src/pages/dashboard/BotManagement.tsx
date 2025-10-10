@@ -14,6 +14,13 @@ import BotDownsellTab from "@/components/bot/BotDownsellTab";
 import BotUploadTab from "@/components/bot/BotUploadTab";
 import BotConfigTab from "@/components/bot/BotConfigTab";
 
+// Função para validar UUID
+const isValidUUID = (uuid: string | undefined): boolean => {
+  if (!uuid) return false;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+};
+
 const BotManagement = () => {
   const { botId } = useParams();
   const navigate = useNavigate();
@@ -22,6 +29,17 @@ const BotManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Validar UUID antes de fazer requisição
+    if (!isValidUUID(botId)) {
+      toast({
+        title: "ID de bot inválido",
+        description: "O ID do bot fornecido não é um UUID válido.",
+        variant: "destructive",
+      });
+      navigate('/dashboard/bots');
+      return;
+    }
+
     if (botId) {
       fetchBot();
     }
@@ -37,6 +55,18 @@ const BotManagement = () => {
         .maybeSingle();
 
       if (error) throw error;
+      
+      // Verificar se o bot foi encontrado
+      if (!data) {
+        toast({
+          title: "Bot não encontrado",
+          description: `Não foi possível encontrar um bot com o ID ${botId}. Verifique se o ID está correto e se você tem permissão para acessá-lo.`,
+          variant: "destructive",
+        });
+        navigate('/dashboard/bots');
+        return;
+      }
+
       setBot(data);
     } catch (error) {
       console.error('Error fetching bot:', error);
@@ -63,134 +93,105 @@ const BotManagement = () => {
   }
 
   if (!bot) {
-    return null;
+    return (
+      <div className="min-h-screen bg-background flex">
+        <DashboardSidebar />
+        <main className="flex-1 lg:ml-64 p-6">
+          <div className="text-center text-muted-foreground">
+            <p>Bot não encontrado.</p>
+            <Button onClick={() => navigate('/dashboard/bots')} className="mt-4">
+              Voltar para lista de bots
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background flex">
       <DashboardSidebar />
-      
-      <main className="flex-1 lg:ml-64">
-        {/* Header */}
-        <div className="glass-card border-b border-glass-border/30 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/dashboard/bots')}
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <MessageSquare className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">{bot.bot_name}</h1>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm text-muted-foreground">@{bot.bot_username}</span>
-                    {bot.is_active && (
-                      <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-xs font-medium">
-                        Ativo
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <Button className="gap-2">
-              <Eye className="w-4 h-4" />
-              Ver no Telegram
-            </Button>
-            <Button 
-              className="gap-2 ml-2"
-              variant="outline"
-              onClick={() => navigate(`/dashboard/bots/${botId}/scheduled`)}
-            >
-              <Settings className="w-4 h-4" />
-              Mensagens Agendadas
-            </Button>
-          </div>
+      <main className="flex-1 lg:ml-64 p-6">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/dashboard/bots')}
+            className="mb-4 hover:bg-glass-light"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+          <h1 className="text-2xl font-bold">{bot?.bot_name || 'Bot'}</h1>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
-          <Tabs defaultValue="messages" className="w-full">
-            <TabsList className="w-full justify-start overflow-x-auto flex-nowrap bg-card/50 border border-border">
-              <TabsTrigger value="messages" className="gap-2">
-                <MessageSquare className="w-4 h-4" />
-                Mensagens
-              </TabsTrigger>
-              <TabsTrigger value="plans" className="gap-2">
-                <DollarSign className="w-4 h-4" />
-                Planos
-              </TabsTrigger>
-              <TabsTrigger value="upsell" className="gap-2">
-                <TrendingUp className="w-4 h-4" />
-                UpSell
-              </TabsTrigger>
-              <TabsTrigger value="downsell" className="gap-2">
-                <TrendingDown className="w-4 h-4" />
-                DownSell
-              </TabsTrigger>
-              <TabsTrigger value="automation" className="gap-2">
-                <Zap className="w-4 h-4" />
-                Automação
-              </TabsTrigger>
-              <TabsTrigger value="remarketing" className="gap-2">
-                <Mail className="w-4 h-4" />
-                Remarketing
-              </TabsTrigger>
-              <TabsTrigger value="config" className="gap-2">
-                <Settings className="w-4 h-4" />
-                Config
-              </TabsTrigger>
-              <TabsTrigger value="upload" className="gap-2">
-                <Upload className="w-4 h-4" />
-                Upload
-              </TabsTrigger>
-            </TabsList>
+        <Tabs defaultValue="messages" className="space-y-6">
+          <TabsList className="glass-card border-glass-border/50 inline-flex">
+            <TabsTrigger value="messages" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Mensagens
+            </TabsTrigger>
+            <TabsTrigger value="plans" className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Planos
+            </TabsTrigger>
+            <TabsTrigger value="upsell" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              UpSell
+            </TabsTrigger>
+            <TabsTrigger value="downsell" className="flex items-center gap-2">
+              <TrendingDown className="h-4 w-4" />
+              DownSell
+            </TabsTrigger>
+            <TabsTrigger value="automation" className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Automação
+            </TabsTrigger>
+            <TabsTrigger value="remarketing" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Remarketing
+            </TabsTrigger>
+            <TabsTrigger value="config" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Config
+            </TabsTrigger>
+            <TabsTrigger value="upload" className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Upload
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="messages" className="mt-6">
-              <BotMessagesTab botId={botId!} />
-            </TabsContent>
-
-            <TabsContent value="plans" className="mt-6">
-              <BotPlansTab botId={botId!} />
-            </TabsContent>
-
-            <TabsContent value="upsell" className="mt-6">
-              <Card className="glass-card border-glass-border/50 p-6">
-                <h2 className="text-xl font-semibold mb-4">Configurar UpSell</h2>
-                <p className="text-muted-foreground">Em desenvolvimento...</p>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="downsell" className="mt-6">
-              <BotDownsellTab botId={botId!} />
-            </TabsContent>
-
-            <TabsContent value="automation" className="mt-6">
-              <BotAutomationTab botId={botId!} />
-            </TabsContent>
-
-            <TabsContent value="remarketing" className="mt-6">
-              <Card className="glass-card border-glass-border/50 p-6">
-                <h2 className="text-xl font-semibold mb-4">Remarketing</h2>
-                <p className="text-muted-foreground">Em desenvolvimento...</p>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="config" className="mt-6">
-              <BotConfigTab botId={botId!} />
-            </TabsContent>
-
-            <TabsContent value="upload" className="mt-6">
-              <BotUploadTab botId={botId!} />
-            </TabsContent>
-          </Tabs>
-        </div>
+          <TabsContent value="messages" className="mt-6">
+            <BotMessagesTab botId={botId!} />
+          </TabsContent>
+          <TabsContent value="plans" className="mt-6">
+            <BotPlansTab botId={botId!} />
+          </TabsContent>
+          <TabsContent value="upsell" className="mt-6">
+            <Card className="glass-card border-glass-border/50 p-6">
+              <h2 className="text-xl font-semibold mb-4">Configurar UpSell</h2>
+              <p className="text-muted-foreground">Em desenvolvimento...</p>
+            </Card>
+          </TabsContent>
+          <TabsContent value="downsell" className="mt-6">
+            <BotDownsellTab botId={botId!} />
+          </TabsContent>
+          <TabsContent value="automation" className="mt-6">
+            <BotAutomationTab botId={botId!} />
+          </TabsContent>
+          <TabsContent value="remarketing" className="mt-6">
+            <Card className="glass-card border-glass-border/50 p-6">
+              <h2 className="text-xl font-semibold mb-4">Remarketing</h2>
+              <p className="text-muted-foreground">Em desenvolvimento...</p>
+            </Card>
+          </TabsContent>
+          <TabsContent value="config" className="mt-6">
+            <BotConfigTab botId={botId!} />
+          </TabsContent>
+          <TabsContent value="upload" className="mt-6">
+            <BotUploadTab botId={botId!} />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
