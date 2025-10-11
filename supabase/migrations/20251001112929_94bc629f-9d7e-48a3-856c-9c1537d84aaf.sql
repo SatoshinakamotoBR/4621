@@ -11,8 +11,8 @@ SELECT cron.schedule(
   $$
   SELECT
     net.http_post(
-        url:='https://ffhkukygnqejsivebimc.supabase.co/functions/v1/process-message-queue',
-        headers:='{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaGt1a3lnbnFlanNpdmViaW1jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTIzOTQ2MCwiZXhwIjoyMDc0ODE1NDYwfQ.3s_VzIvPvVQd8-rRDMp3KVW9uaDLNtVxGHNYPjXVWNw"}'::jsonb,
+        url:='https://gtkavkscbxyfjgovwoxn.supabase.co/functions/v1/process-message-queue',
+        headers:='{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0a2F2a3NjYnh5Zmpnb3Z3b3huIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwNzAyMDQsImV4cCI6MjA3NTY0NjIwNH0.W14rIpbAsnFv5TBAruCM48k-YZr8m-yUQTlBWaZ8yiM"}'::jsonb,
         body:=concat('{"triggered_at": "', now(), '"}')::jsonb
     ) as request_id;
   $$

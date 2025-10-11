@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 // Fallbacks (publishable)
-const FALLBACK_URL = 'https://ffhkukygnqejsivebimc.supabase.co';
-const FALLBACK_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaGt1a3lnbnFlanNpdmViaW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMzk0NjAsImV4cCI6MjA3NDgxNTQ2MH0.6R32towAmVIEA5le4onYucbwD6ox4YRkrRIp9p2wJM8';
+const FALLBACK_URL = 'https://gtkavkscbxyfjgovwoxn.supabase.co';
+const FALLBACK_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0a2F2a3NjYnh5Zmpnb3Z3b3huIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwNzAyMDQsImV4cCI6MjA3NTY0NjIwNH0.W14rIpbAsnFv5TBAruCM48k-YZr8m-yUQTlBWaZ8yiM';
 
 const SUPABASE_URL = import.meta?.env?.VITE_SUPABASE_URL || FALLBACK_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta?.env?.VITE_SUPABASE_PUBLISHABLE_KEY || FALLBACK_ANON_KEY;
